@@ -27,44 +27,65 @@ public class MobileFV_SwitchMesh : EditorWindow
         GUILayout.BeginVertical("box", GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
         EditorGUILayout.BeginHorizontal();
         GUILayout.Label("Switch Meshes on Selected", EditorStyles.boldLabel);
-
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space();
 
-        EditorGUILayout.EndHorizontal();
-        combined = EditorGUILayout.Toggle("Switch Seasonal Version?", combined);
-        meshVersion = EditorGUILayout.IntSlider("Variety Number", meshVersion, 1, 3);
-        SwitchVersion(meshVersion);
-
-        // if (GUILayout.Button("Switch Mesh", GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)))
-        // {
-        //     var go = Selection.activeGameObject;
-        //     if (go == null)
-        //         if (EditorUtility.DisplayDialog("Heads Up", "Can't switch meshes without something selected", "OK"))
-        //             return;
-
-        //     SwitchVersion();
-        // }
-
-        if (combined)
+        if (Selection.activeGameObject)
         {
-            combinedVersion = EditorGUILayout.IntSlider("Seasonal Number", combinedVersion, 1, 4);
-            SwitchCombinedVersion(combinedVersion);
-            // if (GUILayout.Button("Switch Seasonal Version", GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)))
-            // {
-            //     var go = Selection.activeGameObject;
-            //     if (go == null)
-            //         if (EditorUtility.DisplayDialog("Heads Up", "Can't switch meshes without something selected", "OK"))
-            //             return;
+            MeshFilter selMf = Selection.activeGameObject.transform.GetComponent<MeshFilter>();
+            if (selMf)
+            {
 
-            //     // this will switch between the C1, C2, C3, and C4 versions
-            //     SwitchCombinedVersion();
-            // }
+                // verify that we are selected on A FV Mesh before running any of the following methods
+                if (!isMFVMesh())
+                {
+                    EditorGUILayout.BeginVertical();
+                    GUILayout.Label("Not a Mobile ForestVision Mesh. Please select a MFV mesh", EditorStyles.wordWrappedLabel);
+                    EditorGUILayout.EndVertical();
+                }
+                else
+                {
+
+                    combined = EditorGUILayout.Toggle("Switch Seasonal Version?", combined);
+
+                    if (combined)
+                    {
+                        combinedVersion = EditorGUILayout.IntSlider("Seasonal Number", combinedVersion, 1, 4);
+                        SwitchCombinedVersion(combinedVersion);
+                    }
+
+                    meshVersion = EditorGUILayout.IntSlider("Variety Number", meshVersion, 1, 3);
+                    SwitchVersion(meshVersion);
+                }
+            }
+            else
+            {
+                GUILayout.Label("Select a MFV mesh to see your options", EditorStyles.wordWrappedLabel);
+            }
 
         }
+    }
 
+    #region Mesh Checks
+    private bool isMFVMesh()
+    {
+        return (GetFoliageType("C1_") || GetFoliageType("C2_") || GetFoliageType("C3_") || GetFoliageType("C4_"));
     }
 
 
+    ///<summary>Check to see if the passed string matches what the meshfilter mesh name starts with. </summary>
+    private bool GetFoliageType(string nameCompare)
+    {
+        return Selection.activeGameObject.transform.GetComponent<MeshFilter>().sharedMesh.name.StartsWith(nameCompare);
+    }
+
+    private bool GetFoliageTypeOfParent(string nameCompare)
+    {
+        return Selection.activeGameObject.transform.parent.transform.GetComponent<MeshFilter>().sharedMesh.name.StartsWith(nameCompare);
+    }
+
+
+    #endregion
     private void SwitchMesh(GameObject thisGameObject, Mesh[] fbxMeshes, int version)
     {
         // handle the current selection
