@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,8 +11,9 @@ public class MobileFV_SwitchMesh : EditorWindow
 {
 
     int meshVersion = 1;
-    int combinedVersion = 1;
-    private bool combined = false;
+    int seasonalVersion = 1;
+
+
     public static void ShowWindow()
     {
         EditorWindow editorWindow = EditorWindow.GetWindow(typeof(MobileFV_SwitchMesh));
@@ -45,15 +47,14 @@ public class MobileFV_SwitchMesh : EditorWindow
                 }
                 else
                 {
+                    // valid MFV mesh, handle its options
+                    int initialSeasonalVersion = int.Parse(selMf.sharedMesh.name.Substring(1).First().ToString());
+                    seasonalVersion = initialSeasonalVersion;
+                    seasonalVersion = EditorGUILayout.IntSlider("Seasonal Number", seasonalVersion, 1, 4);
+                    SwitchSeasonalVersion(seasonalVersion);
 
-                    combined = EditorGUILayout.Toggle("Switch Seasonal Version?", combined);
-
-                    if (combined)
-                    {
-                        combinedVersion = EditorGUILayout.IntSlider("Seasonal Number", combinedVersion, 1, 4);
-                        SwitchCombinedVersion(combinedVersion);
-                    }
-
+                    int initialMeshVersion = int.Parse(selMf.sharedMesh.name.Last().ToString());
+                    meshVersion = initialMeshVersion;
                     meshVersion = EditorGUILayout.IntSlider("Variety Number", meshVersion, 1, 3);
                     SwitchVersion(meshVersion);
                 }
@@ -72,11 +73,21 @@ public class MobileFV_SwitchMesh : EditorWindow
         return (GetFoliageType("C1_") || GetFoliageType("C2_") || GetFoliageType("C3_") || GetFoliageType("C4_"));
     }
 
+    private bool isMFVTree()
+    {
+        return (GetTreeType("C1__Tree") || GetTreeType("C2__Tree") || GetTreeType("C3__Tree") || GetTreeType("C4__Tree"));
+    }
+
 
     ///<summary>Check to see if the passed string matches what the meshfilter mesh name starts with. </summary>
     private bool GetFoliageType(string nameCompare)
     {
         return Selection.activeGameObject.transform.GetComponent<MeshFilter>().sharedMesh.name.StartsWith(nameCompare);
+    }
+
+    private bool GetTreeType(string nameCompare)
+    {
+        return Selection.activeGameObject.name.StartsWith(nameCompare);
     }
 
     private bool GetFoliageTypeOfParent(string nameCompare)
@@ -86,6 +97,10 @@ public class MobileFV_SwitchMesh : EditorWindow
 
 
     #endregion
+
+
+
+
     private void SwitchMesh(GameObject thisGameObject, Mesh[] fbxMeshes, int version)
     {
         // handle the current selection
@@ -131,10 +146,52 @@ public class MobileFV_SwitchMesh : EditorWindow
         }
     }
 
+
+
+
+    private int GetTreeTypeIndex(GameObject selectedTree)
+    {
+        switch (selectedTree.gameObject.name)
+        {
+            case "C1__Tree_5Arms": return 1;
+            case "C1__Tree_ConiferShort": return 2;
+            case "C1__Tree_ConiferTall": return 3;
+            case "C1__Tree_ConiferYoung": return 4;
+            case "C1__Tree_FullTree": return 5;
+            case "C1__Tree_short": return 6;
+            case "C1__Tree_single": return 7;
+            case "C1__Tree_SkinnyBunches": return 8;
+            case "C1__Tree_SkinnyTall": return 9;
+            case "C1__Tree_TallThin": return 10;
+            case "C1__Tree_young": return 11;
+            case "C1__TreeCurved": return 12;
+            default: return -1;
+        }
+    }
+
+    private string GetTreeTypeName(int typeVersion)
+    {
+        switch (typeVersion)
+        {
+            case 1: return "C1__Tree_5Arms";
+            case 2: return "C1__Tree_ConiferShort";
+            case 3: return "C1__Tree_ConiferTall";
+            case 4: return "C1__Tree_ConiferYoung";
+            case 5: return "C1__Tree_FullTree";
+            case 6: return "C1__Tree_short";
+            case 7: return "C1__Tree_single";
+            case 8: return "C1__Tree_SkinnyBunches";
+            case 9: return "C1__Tree_SkinnyTall";
+            case 10: return "C1__Tree_TallThin";
+            case 11: return "C1__Tree_young";
+            case 12: return "C1__TreeCurved";
+            default: return "unknown";
+        }
+    }
     public void SwitchVersion(int version)
     {
         // load the file once, and then pass it down
-        Mesh[] fbxMeshes = Resources.LoadAll<Mesh>(combined ? "Combined4Meshes" : "SourceMeshes");
+        Mesh[] fbxMeshes = Resources.LoadAll<Mesh>("Combined4Meshes");
         // run through all of the children of the current selection
         foreach (GameObject g in Selection.gameObjects)
         {
@@ -146,7 +203,7 @@ public class MobileFV_SwitchMesh : EditorWindow
         }
     }
 
-    public void SwitchCombinedVersion(int version)
+    public void SwitchSeasonalVersion(int version)
     {
         // load the file once, and then pass it down
         Mesh[] fbxMeshes = Resources.LoadAll<Mesh>("Combined4Meshes");
