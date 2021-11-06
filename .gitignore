@@ -1,0 +1,8 @@
+Packages
+Library
+obj
+Temp
+*.csproj
+*.sln
+Assets/Scenes
+Assets/test
